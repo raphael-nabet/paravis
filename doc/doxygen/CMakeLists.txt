@@ -20,17 +20,35 @@
 SALOME_CONFIGURE_FILE(doxyfile.in doxyfile)
 SALOME_CONFIGURE_FILE(static/header.html.in static/header.html)
 
+SET(_doxy_post_commands)
+IF(APPLE)
+  SET(_doxy_post_commands
+      COMMAND ${CMAKE_COMMAND}
+              -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}/doc_api
+              -P ${CMAKE_CURRENT_SOURCE_DIR}/set_dot_permissions.cmake)
+ENDIF()
+
 ADD_CUSTOM_TARGET(doxy_doc ALL
     COMMAND ${DOXYGEN_EXECUTABLE}
+    ${_doxy_post_commands}
     VERBATIM
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 INSTALL(CODE "EXECUTE_PROCESS(COMMAND \"${CMAKE_COMMAND}\" --build ${PROJECT_BINARY_DIR} --target doxy_doc)")
+
+# Conserver les permissions des .dot à l'installation sur macOS
+SET(_doxy_install_dot_rule)
+IF(APPLE)
+  SET(_doxy_install_dot_rule
+      PATTERN "*.dot" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
+ENDIF()
+
 INSTALL(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc_api/html/
         DESTINATION ${SALOME_INSTALL_DOC}/dev/PARAVIS/api
-    	PATTERN "*.md5" EXCLUDE
-    	PATTERN "*.map" EXCLUDE)
+        PATTERN "*.md5" EXCLUDE
+        PATTERN "*.map" EXCLUDE
+        ${_doxy_install_dot_rule})
 
 SET(MAKE_CLEAN_FILES doc_api)
 SET_DIRECTORY_PROPERTIES(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES "${MAKE_CLEAN_FILES}")

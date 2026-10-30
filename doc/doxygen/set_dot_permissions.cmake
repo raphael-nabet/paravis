@@ -7,31 +7,31 @@
 #
 # See http://www.salome-platform.org/ or email : webmaster.salome@opencascade.com
 #
-# Positionne OWNER_READ OWNER_WRITE OWNER_EXECUTE sur tous les *.dot sous BUILD_DIR.
+# Sets OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ on all the *.dot files under BUILD_DIR (macOS).
 
 cmake_minimum_required(VERSION 3.0)
 
-set(DOT_FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
+set(DOT_FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
 
 if(NOT DEFINED BUILD_DIR)
-  message(FATAL_ERROR "BUILD_DIR non défini : cmake -DBUILD_DIR=<dir> -P set_dot_permissions.cmake")
+  message(FATAL_ERROR "BUILD_DIR not defined: cmake -DBUILD_DIR=<dir> -P set_dot_permissions.cmake")
 endif()
 
 if(NOT IS_DIRECTORY "${BUILD_DIR}")
-  message(STATUS "set_dot_permissions : ${BUILD_DIR} absent, rien à faire")
+  message(STATUS "set_dot_permissions: ${BUILD_DIR} does not exist, nothing to do")
   return()
 endif()
 
 file(GLOB_RECURSE _dot_files "${BUILD_DIR}/*.dot")
 if(NOT _dot_files)
-  message(STATUS "set_dot_permissions : aucun fichier .dot sous ${BUILD_DIR}")
+  message(STATUS "set_dot_permissions: no .dot file under ${BUILD_DIR}")
   return()
 endif()
 
 if(NOT CMAKE_VERSION VERSION_LESS 3.19)
   file(CHMOD ${_dot_files} FILE_PERMISSIONS ${DOT_FILE_PERMISSIONS})
 else()
-  # Repli CMake < 3.19 : déplacement puis recopie avec les permissions voulues
+  # Fallback for CMake < 3.19: move, then copy back with the expected permissions
   set(_tmp_dir "${BUILD_DIR}/.dot_perms_tmp")
   file(REMOVE_RECURSE "${_tmp_dir}")
   file(MAKE_DIRECTORY "${_tmp_dir}")
@@ -48,5 +48,5 @@ else()
 endif()
 
 list(LENGTH _dot_files _n)
-message(STATUS "set_dot_permissions : ${_n} fichier(s) .dot mis en ${DOT_FILE_PERMISSIONS}")
+message(STATUS "set_dot_permissions: ${_n} .dot file(s) set to ${DOT_FILE_PERMISSIONS}")
 
